@@ -1,5 +1,8 @@
 
 from random import *
+import networkx as nx
+import matplotlib.pyplot as plt
+
 
 class te:
     def __init__(self,ge=None):
@@ -85,7 +88,7 @@ class pyAG:
         self.cross()
         self.update()
         self.gen += 1
-        print self.fitm,self.fim
+        #print self.fitm,self.fim
 
 seed(11)
 ga = pyAG(100, te, 0.0001, 0.5)
@@ -93,8 +96,22 @@ ga = pyAG(100, te, 0.0001, 0.5)
 for i in range(1000):
     ga.genloop()
 r = 0
-f = open("btr2.dat","w")
-for x in ga.pop[ga.f[0][1]].genome:
-    r += 2*x-1
-    f.write("%d\n"%r)
-f.close()
+# f = open("btr2.dat","w")
+
+
+# for x in ga.pop[ga.f[0][1]].genome:
+#     r += 2*x-1
+#     f.write("%d\n"%r)
+
+# f.close()
+
+print ga.pop[ga.f[0][1]].genome
+
+G=nx.Graph()
+
+G.add_nodes_from(range(len(ga.pop[ga.f[0][1]].genome)))
+for i in xrange(1,len(ga.pop[ga.f[0][1]].genome)):
+    if random()>0.2:
+        G.add_edge(i-1,i)
+nx.draw(G, node_size=2)
+plt.show()

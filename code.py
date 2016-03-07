@@ -62,19 +62,31 @@ class individu:
     else:
       self.genome=ind.genome[:]
       self.nb=ind.nb
- 
+
+
+#A MODIFIER POUR LA CLIQUE
   #Calcul de la fitness de l'individu
   def fitness(self,a1,a2):
     self.creation_graphe()
     f1=self.petit_monde()
     f2=self.loi_puissance()
+    if self.loi_clustering()==True:
+      f3=1
+      a3=-0.2
+    else:
+      f3=1
+      a3=0
+
     #on ne veut pas de graphe pas connecte
     #if nx.is_connected(self.graphe)==False:
      # sub=nx.connected_component_subgraphs(self.graphe)
       #f1*=len(sub)
       #f2*=len(sub)
-    return a1*f1,a2*f2
+    return a1*f1,a2*f2,a3*f3
  
+
+    
+
   def petit_monde(self): 
    if nx.is_connected(self.graphe):
      l= nx.average_shortest_path_length(self.graphe)
@@ -98,6 +110,25 @@ class individu:
     for k in range(1,len(distri)):
       f+=abs(distri[k]-(self.nb* (k**(-GAMMA))))
     return f
+
+
+#CLIQUE
+
+  def loi_clustering(self):
+
+    degre=nx.degree_centrality(self.graphe)
+    coef_k=nx.clustering(self.graphe,weight=None)
+    moy_coef=nx.average_clustering(self.graphe)
+    tab_deg=nx.degree(self.graphe)
+    list_deg=[]
+    for key,value in tab_deg:
+      temp = [key,value]
+      list_deg.append(temp[1])
+    gradient, intercept, r_value, p_value, std_err = stats.linregress(list_deg,coef_k)
+
+    return p_value>0.05
+
+
  
   #Transformation d'un genome en graphe
   #genome : triangle supérieur de la matrice d'adjacence (sans la diagonale)

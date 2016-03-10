@@ -90,7 +90,7 @@ class individu:
   def petit_monde(self): 
    if nx.is_connected(self.graphe):
      l= nx.average_shortest_path_length(self.graphe)
-     d=abs(l-log(self.nb))
+     d=abs(l-log(log(self.nb)))
    else:
      sub=list(nx.connected_component_subgraphs(self.graphe))
      n=len(sub)

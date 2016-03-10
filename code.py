@@ -101,7 +101,7 @@ class individu:
        else:
          l+=nx.average_shortest_path_length(g)
      l=l/1.0*n
-     d=abs(l-log(self.nb))*len(sub)
+     d=abs(l-log(log(self.nb)))*len(sub)
    return d
  
   def loi_puissance(self):

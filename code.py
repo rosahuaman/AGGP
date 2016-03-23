@@ -346,12 +346,18 @@ class pop:
     self.cross()
  
   #Evolution d'une population sur X génération
-  def loop(self,a1,a2,a3,nbgen_ou_seuil):
+  def loop(self,a1,a2,a3):
+    liste_fitness=[]
+    epsilon=20
     if not SEUIL:
-      while self.gen<=nbgen_ou_seuil:
+      while self.gen<=nbgen_ou_seuil  and epsilon>0.05 :
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
+        liste_fitness.append(self.fitmoy)
+        if self.gen > 80:
+          epsilon=abs((sum(liste_fitness[int(self.gen-50):int(self.gen)])/50)-self.fitmoy)
+          print epsilon
         print self.gen," fitmoy= ",round(self.fitmoy,4),"\t petit_moy= ",round(self.petit_moy/a1,4), "\t loi_moy= ",round(self.loi_moy/a2,4), "\t   individu min= ",round(self.fitmin[0],4),"\t",round(self.fitmin[1],4),"\t",round(self.fitmin[2],4)
     else :
       self.calc_fitness(a1,a2,a3)
@@ -360,7 +366,10 @@ class pop:
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
         print self.gen," fitmoy= ",round(self.fitmoy),"  fitmin= ",self.fitmin  #affichage de la génération, fitness moy et min
- 
+    global nbgen_ou_seuil
+    nbgen_ou_seuil=self.gen-1
+
+    print " Nombre Seuil",nbgen_ou_seuil
 #-------------------------------------------------------------------------------------------------------------------------------
   #Sauvegarde les données de l'individu ayant la plus basse fitness
     # crée un fichier "nom".edge pour visualiser le graphe sous Cytoscape 
@@ -470,7 +479,7 @@ except OSError:
 random.seed(11)
  
 pop1=pop(N,individu,tauxMut,tauxCross,noeud)
-pop1.loop(a1,a2,a3,nbgen_ou_seuil)
+pop1.loop(a1,a2,a3)
 pop1.save_Graph()
 pop1.hist_Graph()
 pop1.plot_Graph()

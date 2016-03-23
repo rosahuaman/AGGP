@@ -1,5 +1,6 @@
 # -*- coding: cp1252 -*-
 import random
+from scipy import stats
 from numpy import *
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -32,7 +33,7 @@ noeud=40
  
 #Nb generation (SEUIL=False) ou seuil (SEUIL=True)
 SEUIL=False
-nbgen_ou_seuil=500
+nbgen_ou_seuil=10
  
 #Coeff petit monde
 a1=1
@@ -40,6 +41,7 @@ a1=1
 #Coeff loi puissance
 GAMMA=2.5  #entre 2 et 3
 a2=1
+a3=-0.2
  
 #1-25: 0.3868  19.5564
  
@@ -66,23 +68,24 @@ class individu:
 
 #A MODIFIER POUR LA CLIQUE
   #Calcul de la fitness de l'individu
-  def fitness(self,a1,a2):
+  def fitness(self,a1,a2,a3):
     self.creation_graphe()
+
     f1=self.petit_monde()
     f2=self.loi_puissance()
-    if self.loi_clustering()==True:
-      f3=1
-      a3=-0.2
+    f3=self.loi_clustering()
+
+    if f3==True:
+      b=1
     else:
-      f3=1
-      a3=0
+      b=0
 
     #on ne veut pas de graphe pas connecte
     #if nx.is_connected(self.graphe)==False:
      # sub=nx.connected_component_subgraphs(self.graphe)
       #f1*=len(sub)
       #f2*=len(sub)
-    return a1*f1,a2*f2,a3*f3
+    return a1*f1,a2*f2,a3*b 
  
 
     
@@ -90,7 +93,7 @@ class individu:
   def petit_monde(self): 
    if nx.is_connected(self.graphe):
      l= nx.average_shortest_path_length(self.graphe)
-     d=abs(l-log(self.nb))
+     d=abs(l-log(log(self.nb)))
    else:
      sub=list(nx.connected_component_subgraphs(self.graphe))
      n=len(sub)
@@ -101,30 +104,51 @@ class individu:
        else:
          l+=nx.average_shortest_path_length(g)
      l=l/1.0*n
-     d=abs(l-log(self.nb))*len(sub)
+     d=abs(l-log(log(self.nb)))*len(sub)
    return d
  
+
   def loi_puissance(self):
     distri = nx.degree_histogram(self.graphe)
+    k_obs=nx.average_degree_connectivity(self.graphe)
+
+    tab_deg=self.graphe.degree() #calcul les desgrés de tous les noeuds
+    list_deg=[]
+    type(tab_deg)
+    for key,value in tab_deg.iteritems():
+      temp = [key,value]
+      list_deg.append(temp[1])    
+ ########################""
     f=0
     for k in range(1,len(distri)):
       f+=abs(distri[k]-(self.nb* (k**(-GAMMA))))
+ ########################
+    pk=[x/self.nb for x in distri] 
+    gradient, intercept, r_value, p_value, std_err = stats.linregress(distri,pk)
+    #stats.kstest(k_theo,k_obs)
+
     return f
+
 
 
 #CLIQUE
 
   def loi_clustering(self):
 
-    degre=nx.degree_centrality(self.graphe)
+    #degre=nx.degree_centrality(self.graphe) 
     coef_k=nx.clustering(self.graphe,weight=None)
     moy_coef=nx.average_clustering(self.graphe)
-    tab_deg=nx.degree(self.graphe)
+    tab_deg=self.graphe.degree() #calcul les desgrés de tous les noeuds
+    type(tab_deg)
     list_deg=[]
-    for key,value in tab_deg:
+    for key,value in tab_deg.iteritems():
       temp = [key,value]
       list_deg.append(temp[1])
-    gradient, intercept, r_value, p_value, std_err = stats.linregress(list_deg,coef_k)
+    list_coef=[]
+    for key,value in coef_k.iteritems():
+      temp = [key,value]
+      list_coef.append(temp[1])
+    gradient, intercept, r_value, p_value, std_err = stats.linregress(list_deg,list_coef)
 
     return p_value>0.05
 
@@ -166,15 +190,15 @@ class pop:
     self.tab_fitmin=[[],[],[]]
  
   #calcul de la fitness de chaque individu et fitness moyenne/minimale de la population
-  def calc_fitness(self,a1,a2):
+  def calc_fitness(self,a1,a2,a3):
     self.f=[]        #tableau des fitness
     self.fitmoy=0     #fitness moyenne
     self.fitmin=[10000,0,0]  #fitness globale et detail de l'individu mmin
     self.petit_moy=0    #fitness petit monde moyenne
     self.loi_moy=0      #fitness loi puissance moyenne
     for i,x in enumerate(self.pop):  #i:indice  x:individu
-      f1,f2=x.fitness(a1,a2)
-      fi=f1+f2
+      f1,f2,f3=x.fitness(a1,a2,a3)
+      fi=f1+f2+f3
       self.fitmoy += fi
       self.petit_moy+=f1
       self.loi_moy+=f2
@@ -255,17 +279,17 @@ class pop:
     self.cross()
  
   #Evolution d'une population sur X génération
-  def loop(self,a1,a2,nbgen_ou_seuil):
+  def loop(self,a1,a2,a3,nbgen_ou_seuil):
     if not SEUIL:
       while self.gen<=nbgen_ou_seuil:
-        self.calc_fitness(a1,a2)  #calcul tableau fitness, fitness min et moy 
+        self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
         print self.gen," fitmoy= ",round(self.fitmoy,4),"\t petit_moy= ",round(self.petit_moy/a1,4), "\t loi_moy= ",round(self.loi_moy/a2,4), "\t   individu min= ",round(self.fitmin[0],4),"\t",round(self.fitmin[1],4),"\t",round(self.fitmin[2],4)
     else :
-      self.calc_fitness(a1,a2)
+      self.calc_fitness(a1,a2,a3)
       while self.fitmin>nbgen_ou_seuil:
-        self.calc_fitness(a1,a2)  #calcul tableau fitness, fitness min et moy 
+        self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
         print self.gen," fitmoy= ",round(self.fitmoy),"  fitmin= ",self.fitmin  #affichage de la génération, fitness moy et min
@@ -363,7 +387,7 @@ except OSError:
 random.seed(11)
  
 pop1=pop(N,individu,tauxMut,tauxCross,noeud)
-pop1.loop(a1,a2,nbgen_ou_seuil)
+pop1.loop(a1,a2,a3,nbgen_ou_seuil)
 pop1.save_Graph()
 pop1.hist_Graph()
 pop1.plot_Graph()

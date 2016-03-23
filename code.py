@@ -145,18 +145,22 @@ class individu:
     list_deg_log=[]
 
     for key,value in tab_deg.iteritems():
+      
       temp = [key,value]
       list_deg.append(temp[1])
-      tmp=log(temp[1])
+      tmp=log(temp[1]+0.0001)
       list_deg_log.append(tmp)
 
     list_coef=[]
     list_coef_log=[]
 
+
+
     for key,value in coef_k.iteritems():
+     
       temp = [key,value]
       list_coef.append(temp[1])
-      tmp=log(temp[1])
+      tmp=log(temp[1]+0.0001)
       list_coef_log.append(tmp)
     gradient, intercept, r_value, p_value, std_err = stats.linregress(list_deg_log,list_coef_log)
 

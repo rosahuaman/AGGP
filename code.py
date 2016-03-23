@@ -33,7 +33,7 @@ noeud=40
  
 #Nb generation (SEUIL=False) ou seuil (SEUIL=True)
 SEUIL=False
-nbgen_ou_seuil=10
+nbgen_ou_seuil=250
  
 #Coeff petit monde
 a1=1
@@ -91,21 +91,21 @@ class individu:
     
 
   def petit_monde(self): 
-   if nx.is_connected(self.graphe):
-     l= nx.average_shortest_path_length(self.graphe)
-     d=abs(l-log(log(self.nb)))
-   else:
-     sub=list(nx.connected_component_subgraphs(self.graphe))
-     n=len(sub)
-     l=0
-     for g in sub:
-       if g.number_of_nodes()==1:
-         n=n-1
-       else:
-         l+=nx.average_shortest_path_length(g)
-     l=l/1.0*n
-     d=abs(l-log(log(self.nb)))*len(sub)
-   return d
+	if nx.is_connected(self.graphe):
+		l= nx.average_shortest_path_length(self.graphe)
+		d=abs(l-log(log(self.nb)))
+	else:
+		sub=list(nx.connected_component_subgraphs(self.graphe))
+		n=len(sub)
+		l=0
+		for g in sub:
+			if g.number_of_nodes()==1:
+				n=n-1
+			else:
+				l+=nx.average_shortest_path_length(g)
+				l=l/1.0*n
+		d=abs(l-log(log(self.nb)))*len(sub)
+	return d
  
 
   def loi_puissance(self):
@@ -134,7 +134,6 @@ class individu:
 #CLIQUE
 
   def loi_clustering(self):
-
     #degre=nx.degree_centrality(self.graphe) 
     coef_k=nx.clustering(self.graphe,weight=None)
     moy_coef=nx.average_clustering(self.graphe)
@@ -155,7 +154,6 @@ class individu:
     list_coef_log=[]
 
 
-
     for key,value in coef_k.iteritems():
      
       temp = [key,value]
@@ -163,11 +161,58 @@ class individu:
       tmp=log(temp[1]+0.0001)
       list_coef_log.append(tmp)
     gradient, intercept, r_value, p_value, std_err = stats.linregress(list_deg_log,list_coef_log)
-
-    distrib_th=-1*list_deg_log
+    
+    distrib_th=[]
+    for i in range(len(list_deg_log)):
+		distrib_th.append(-1*list_deg_log[i])
+    
     ks_val=stats.ks_2samp(list_coef_log,distrib_th)
-
+    
+    """
+    plt.plot(list_deg_log,list_coef_log,'b')
+    plt.plot(list_deg_log,distrib_th,'r')
+    plt.xlabel("k")
+    plt.ylabel("C(k)")
+    plt.show()
+    plt.savefig("data/distrib_clique.png")
+    plt.close()
+    """
     return ks_val>0.05
+
+# Clique du meilleur individu : avec display facon barbarasi
+  def loi_clustering_best(self):
+		coef_k=nx.clustering(self.graphe,weight=None)
+		moy_coef=nx.average_clustering(self.graphe)
+		tab_deg=self.graphe.degree() #calcul les desgrés de tous les noeuds
+
+		   
+		list_deg_log=[]
+
+		for key,value in tab_deg.iteritems():
+		  
+		  temp = [key,value]
+		  tmp=log(temp[1]+0.0001)
+		  list_deg_log.append(tmp)
+
+		list_coef_log=[]
+
+
+		for key,value in coef_k.iteritems():		 
+		  temp = [key,value]
+		  tmp=log(temp[1]+0.0001)
+		  list_coef_log.append(tmp)
+		
+		
+		
+		distrib_th=[]
+		for i in range(len(list_deg_log)):
+			distrib_th.append(-1*list_deg_log[i])
+		
+		print "longueurs", len(list_coef_log),len(list_deg_log),len(distrib_th)				
+		return [list_deg_log,list_coef_log,distrib_th]
+		
+		
+    
 
 
  #---------------------------------
@@ -336,8 +381,10 @@ class pop:
         if tab[i,j] == 1:
           fedge.write(str(i+1)+"\t" + str(j+1)+ "\t" +" "+"\n") # enregistrement des edges (interactions entre noeud)
     fedge.close()
-     
-    # création de l'image (quand il y a trop de noeud devient ilisible)
+    
+
+    
+    # création de l'image (quand il y a trop de noeud devient illisible)
     nx.draw(G)
     plt.savefig("data/image"+nom+".png") 
     plt.show()
@@ -367,6 +414,19 @@ class pop:
     plt.show()
     plt.savefig("data/histogram.png")
     plt.close()
+    
+    # Affichage des distributions de clustering
+    distrib=individu_min.loi_clustering_best()
+    plt.plot(distrib[0],distrib[1],'bo')
+    plt.plot(distrib[0],distrib[2],'r')
+    plt.xlabel("k")
+    plt.ylabel("C(k)")
+    plt.show()
+    plt.savefig("data/distrib_clique.png")
+    plt.close()
+    
+    
+    
    
   def plot_Graph(self) :
    
@@ -397,6 +457,7 @@ class pop:
     plt.show()
     plt.savefig("data/loipui.png")
     plt.close()
+    
      
      
 #MAIN

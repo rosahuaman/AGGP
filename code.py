@@ -22,18 +22,18 @@ TAUX1=0.05
 ELITISTE=True
  
 #nombre d'individu (=nombre de graphe)
-N=150
+N=200
  
 #taux mutations
 tauxMut=0.001
 tauxCross=0.0002
  
 #nombre de noeud par graphe
-noeud=40
+noeud=100
  
 #Nb generation (SEUIL=False) ou seuil (SEUIL=True)
 SEUIL=False
-nbgen_ou_seuil=250
+nbgen_ou_seuil=500
  
 #Coeff petit monde
 a1=1
@@ -352,14 +352,14 @@ class pop:
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
-        print self.gen," fitmoy= ",round(self.fitmoy,4),"\t petit_moy= ",round(self.petit_moy/a1,4), "\t loi_moy= ",round(self.loi_moy/a2,4), "\t   individu min= ",round(self.fitmin[0],4),"\t",round(self.fitmin[1],4),"\t",round(self.fitmin[2],4)
+        #print self.gen," fitmoy= ",round(self.fitmoy,4),"\t petit_moy= ",round(self.petit_moy/a1,4), "\t loi_moy= ",round(self.loi_moy/a2,4), "\t   individu min= ",round(self.fitmin[0],4),"\t",round(self.fitmin[1],4),"\t",round(self.fitmin[2],4)
     else :
       self.calc_fitness(a1,a2,a3)
       while self.fitmin>nbgen_ou_seuil:
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
-        print self.gen," fitmoy= ",round(self.fitmoy),"  fitmin= ",self.fitmin  #affichage de la génération, fitness moy et min
+        #print self.gen," fitmoy= ",round(self.fitmoy),"  fitmin= ",self.fitmin  #affichage de la génération, fitness moy et min
  
 #-------------------------------------------------------------------------------------------------------------------------------
   #Sauvegarde les données de l'individu ayant la plus basse fitness
@@ -397,14 +397,14 @@ class pop:
       s+=str(i)
     f.write(s)
     f.close()
-    print "Genome : " + s
+    #print "Genome : " + s
  
  
   def hist_Graph(self): # sauvegarde les données de l'individu ayant la plus basse fitness
     individu_min=self.pop[pop1.f[0][1]]
     distri = nx.degree_histogram(individu_min.graphe)
     liste = []
-    print "distri"+ str(distri)
+    #print "distri"+ str(distri)
     for i in range(0,len(distri)) :
       for j in range(0,distri[i]) :
         liste.append(i)
@@ -430,8 +430,8 @@ class pop:
    
   def plot_Graph(self) :
    
-    print str(len(range(1,nbgen_ou_seuil+1)))
-    print str(len(self.tab_fitmin[0]))
+    #print str(len(range(1,nbgen_ou_seuil+1)))
+    #print str(len(self.tab_fitmin[0]))
    
     plt.plot(range(0,nbgen_ou_seuil+1),self.tab_fitmin[0],'b')
     plt.plot(range(0,nbgen_ou_seuil+1),self.tab_fitmoy[0],'r')

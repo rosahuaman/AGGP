@@ -5,6 +5,7 @@ from numpy import *
 import matplotlib.pyplot as plt
 import networkx as nx
 import os
+from scipy.stats import ks_2samp
  
 #-----------------------------------------------------------------------------------------------------------------------------
 #            PARAMETRES
@@ -129,7 +130,43 @@ class individu:
 
     return f
 
+# Loi de ouissance du meilleur individu : avec display facon barbarasi
+  def loi_puissance_best(self):
 
+    distri = nx.degree_histogram(self.graphe)
+    relle =[]
+    index=range(1,len(distri)+1)
+
+    for i in xrange(len(distri)):
+      relle.append(index[i]**(-GAMMA))
+
+    for i in xrange(len(distri)):
+      distri[i]=distri[i]/float(noeud)
+
+    '''
+    for i in xrange(len(distri)):
+      relle.append(log(index[i]**(-GAMMA)))
+
+    for i in xrange(len(distri)):
+      distri[i]=log(distri[i]/float(noeud))
+    
+
+    for i in xrange(len(index)):
+      index[i]=log(index[i])
+    '''  
+    
+       
+    lr_relle = stats.linregress(index,relle)
+    slope_relle = lr_relle[0] 
+
+    lr_obs = stats.linregress(index,distri)
+    slope_obs = lr_obs[0]  
+
+    a=ks_2samp(relle,distri)
+    print "p_value : ",a[1]
+
+
+    return [index,distri,relle,slope_obs,slope_relle]
 
 #CLIQUE
 
@@ -433,6 +470,18 @@ class pop:
     plt.show()
     plt.savefig("data/distrib_clique.png")
     plt.close()
+
+     # Affichage des distributions de clustering
+    distribp=individu_min.loi_puissance_best()
+    plt.loglog()
+    plt.plot(distribp[0],distribp[1],'bo')
+    plt.plot(distribp[0],distribp[2],'r')
+    plt.xlabel("k")
+    plt.ylabel("P(k)")
+    plt.show()
+    plt.savefig("data/distrib_puissance.png")
+    plt.close()
+    
     
     
     

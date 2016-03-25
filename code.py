@@ -16,7 +16,7 @@ global ELITISTE
 global SEUIL
 global GAMMA
  
-#Taux d'arrette au départ
+#Taux d'arete au départ
 TAUX1=0.05
  
 #Methode selection
@@ -44,7 +44,7 @@ GAMMA=2.5  #entre 2 et 3
 a2=1
 a3=-0.2
  
-#1-25: 0.3868  19.5564
+
  
  
 #---------------------------------------------------------------------------------------------------------------------------

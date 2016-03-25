@@ -5,6 +5,7 @@ from numpy import *
 import matplotlib.pyplot as plt
 import networkx as nx
 import os
+from scipy.stats import ks_2samp
  
 #-----------------------------------------------------------------------------------------------------------------------------
 #            PARAMETRES
@@ -22,18 +23,18 @@ TAUX1=0.05
 ELITISTE=True
  
 #nombre d'individu (=nombre de graphe)
-N=200
+N=150
  
 #taux mutations
 tauxMut=0.001
 tauxCross=0.0002
  
 #nombre de noeud par graphe
-noeud=100
+noeud=40
  
 #Nb generation (SEUIL=False) ou seuil (SEUIL=True)
 SEUIL=False
-nbgen_ou_seuil=500
+nbgen_ou_seuil=250
  
 #Coeff petit monde
 a1=1
@@ -129,7 +130,43 @@ class individu:
 
     return f
 
+# Loi de ouissance du meilleur individu : avec display facon barbarasi
+  def loi_puissance_best(self):
 
+    distri = nx.degree_histogram(self.graphe)
+    relle =[]
+    index=range(1,len(distri)+1)
+
+    for i in xrange(len(distri)):
+      relle.append(index[i]**(-GAMMA))
+
+    for i in xrange(len(distri)):
+      distri[i]=distri[i]/float(noeud)
+
+    '''
+    for i in xrange(len(distri)):
+      relle.append(log(index[i]**(-GAMMA)))
+
+    for i in xrange(len(distri)):
+      distri[i]=log(distri[i]/float(noeud))
+    
+
+    for i in xrange(len(index)):
+      index[i]=log(index[i])
+    '''  
+    
+       
+    lr_relle = stats.linregress(index,relle)
+    slope_relle = lr_relle[0] 
+
+    lr_obs = stats.linregress(index,distri)
+    slope_obs = lr_obs[0]  
+
+    a=ks_2samp(relle,distri)
+    print "p_value : ",a[1]
+
+
+    return [index,distri,relle,slope_obs,slope_relle]
 
 #CLIQUE
 
@@ -346,21 +383,30 @@ class pop:
     self.cross()
  
   #Evolution d'une population sur X génération
-  def loop(self,a1,a2,a3,nbgen_ou_seuil):
+  def loop(self,a1,a2,a3):
+    liste_fitness=[]
+    epsilon=20
     if not SEUIL:
-      while self.gen<=nbgen_ou_seuil:
+      while self.gen<=nbgen_ou_seuil  and epsilon>0.05 :
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
-        #print self.gen," fitmoy= ",round(self.fitmoy,4),"\t petit_moy= ",round(self.petit_moy/a1,4), "\t loi_moy= ",round(self.loi_moy/a2,4), "\t   individu min= ",round(self.fitmin[0],4),"\t",round(self.fitmin[1],4),"\t",round(self.fitmin[2],4)
+        liste_fitness.append(self.fitmoy)
+        if self.gen > 80:
+          epsilon=abs((sum(liste_fitness[int(self.gen-50):int(self.gen)])/50)-self.fitmoy)
+          print epsilon
+        print self.gen," fitmoy= ",round(self.fitmoy,4),"\t petit_moy= ",round(self.petit_moy/a1,4), "\t loi_moy= ",round(self.loi_moy/a2,4), "\t   individu min= ",round(self.fitmin[0],4),"\t",round(self.fitmin[1],4),"\t",round(self.fitmin[2],4)
     else :
       self.calc_fitness(a1,a2,a3)
       while self.fitmin>nbgen_ou_seuil:
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
-        #print self.gen," fitmoy= ",round(self.fitmoy),"  fitmin= ",self.fitmin  #affichage de la génération, fitness moy et min
- 
+        print self.gen," fitmoy= ",round(self.fitmoy),"  fitmin= ",self.fitmin  #affichage de la génération, fitness moy et min
+    global nbgen_ou_seuil
+    nbgen_ou_seuil=self.gen-1
+
+    print " Nombre Seuil",nbgen_ou_seuil
 #-------------------------------------------------------------------------------------------------------------------------------
   #Sauvegarde les données de l'individu ayant la plus basse fitness
     # crée un fichier "nom".edge pour visualiser le graphe sous Cytoscape 
@@ -397,14 +443,14 @@ class pop:
       s+=str(i)
     f.write(s)
     f.close()
-    #print "Genome : " + s
+    print "Genome : " + s
  
  
   def hist_Graph(self): # sauvegarde les données de l'individu ayant la plus basse fitness
     individu_min=self.pop[pop1.f[0][1]]
     distri = nx.degree_histogram(individu_min.graphe)
     liste = []
-    #print "distri"+ str(distri)
+    print "distri"+ str(distri)
     for i in range(0,len(distri)) :
       for j in range(0,distri[i]) :
         liste.append(i)
@@ -424,14 +470,26 @@ class pop:
     plt.show()
     plt.savefig("data/distrib_clique.png")
     plt.close()
+
+     # Affichage des distributions de clustering
+    distribp=individu_min.loi_puissance_best()
+    plt.loglog()
+    plt.plot(distribp[0],distribp[1],'bo')
+    plt.plot(distribp[0],distribp[2],'r')
+    plt.xlabel("k")
+    plt.ylabel("P(k)")
+    plt.show()
+    plt.savefig("data/distrib_puissance.png")
+    plt.close()
+    
     
     
     
    
   def plot_Graph(self) :
    
-    #print str(len(range(1,nbgen_ou_seuil+1)))
-    #print str(len(self.tab_fitmin[0]))
+    print str(len(range(1,nbgen_ou_seuil+1)))
+    print str(len(self.tab_fitmin[0]))
    
     plt.plot(range(0,nbgen_ou_seuil+1),self.tab_fitmin[0],'b')
     plt.plot(range(0,nbgen_ou_seuil+1),self.tab_fitmoy[0],'r')
@@ -470,7 +528,7 @@ except OSError:
 random.seed(11)
  
 pop1=pop(N,individu,tauxMut,tauxCross,noeud)
-pop1.loop(a1,a2,a3,nbgen_ou_seuil)
+pop1.loop(a1,a2,a3)
 pop1.save_Graph()
 pop1.hist_Graph()
 pop1.plot_Graph()

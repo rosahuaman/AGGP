@@ -94,7 +94,7 @@ class individu:
   def petit_monde(self): 
 	if nx.is_connected(self.graphe):
 		l= nx.average_shortest_path_length(self.graphe)
-		d=(l-log(log(self.nb)))^2
+		d=(l-log(log(self.nb)))**2
 	else:
 		sub=list(nx.connected_component_subgraphs(self.graphe))
 		n=len(sub)
@@ -105,7 +105,7 @@ class individu:
 			else:
 				l+=nx.average_shortest_path_length(g)
 				l=l/1.0*n
-		d=(l-log(log(self.nb)))*len(sub)^2
+		d=(l-log(log(self.nb)))*len(sub)**2
 	return d
  
 
@@ -122,7 +122,7 @@ class individu:
  ########################""
     f=0
     for k in range(1,len(distri)):
-      f+=abs(distri[k]-(self.nb* (k**(-GAMMA))))
+      f+=(distri[k]-(self.nb* (k**(-GAMMA))))**2
  ########################
     pk=[x/self.nb for x in distri] 
     gradient, intercept, r_value, p_value, std_err = stats.linregress(distri,pk)

@@ -34,14 +34,14 @@ noeud=50
  
 #Nb generation (SEUIL=False) ou seuil (SEUIL=True)
 SEUIL=False
-nbgen_ou_seuil=500
+nbgen_ou_seuil=1000
  
 #Coeff petit monde
 a1=0.1
  
 #Coeff loi puissance
 GAMMA=2.5  #entre 2 et 3
-a2=2
+a2=5
 a3=-0.1
  
 
@@ -80,7 +80,7 @@ class individu:
     if f3==True:
       b=5
     else:
-      b=-1
+      b=-10
 
     #on ne veut pas de graphe pas connecte
     #if nx.is_connected(self.graphe)==False:
@@ -395,7 +395,7 @@ class pop:
     liste_fitness=[]
     epsilon=20
     if not SEUIL:
-      while self.gen<=nbgen_ou_seuil  and epsilon>0.05 :
+      while self.gen<=nbgen_ou_seuil  and epsilon>0.005 :
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1

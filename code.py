@@ -23,26 +23,26 @@ TAUX1=0.05
 ELITISTE=True
  
 #nombre d'individu (=nombre de graphe)
-N=150
+N=250
  
 #taux mutations
 tauxMut=0.001
 tauxCross=0.0002
  
 #nombre de noeud par graphe
-noeud=40
+noeud=50
  
 #Nb generation (SEUIL=False) ou seuil (SEUIL=True)
 SEUIL=False
-nbgen_ou_seuil=250
+nbgen_ou_seuil=500
  
 #Coeff petit monde
-a1=1
+a1=0.1
  
 #Coeff loi puissance
 GAMMA=2.5  #entre 2 et 3
 a2=1
-a3=-0.2
+a3=-0.1
  
 
  
@@ -77,16 +77,16 @@ class individu:
     f3=self.loi_clustering()
 
     if f3==True:
-      b=1
+      b=2
     else:
-      b=0
+      b=-1
 
     #on ne veut pas de graphe pas connecte
     #if nx.is_connected(self.graphe)==False:
      # sub=nx.connected_component_subgraphs(self.graphe)
       #f1*=len(sub)
       #f2*=len(sub)
-    return a1*f1,a2*f2,a3*b 
+    return log(a1*f1),a2*f2,a3*b 
  
 
     
@@ -130,7 +130,7 @@ class individu:
 
     return f
 
-# Loi de ouissance du meilleur individu : avec display facon barbarasi
+# Loi de puissance du meilleur individu : avec display facon barbarasi
   def loi_puissance_best(self):
 
     distri = nx.degree_histogram(self.graphe)
@@ -297,12 +297,14 @@ class pop:
   def calc_fitness(self,a1,a2,a3):
     self.f=[]        #tableau des fitness
     self.fitmoy=0     #fitness moyenne
-    self.fitmin=[10000,0,0]  #fitness globale et detail de l'individu mmin
+    self.fitmin=[1000,0,0]  #fitness globale et detail de l'individu mmin
     self.petit_moy=0    #fitness petit monde moyenne
     self.loi_moy=0      #fitness loi puissance moyenne
     for i,x in enumerate(self.pop):  #i:indice  x:individu
       f1,f2,f3=x.fitness(a1,a2,a3)
       fi=f1+f2+f3
+      #fi=fi/10000
+      #fi=log(fi)
       self.fitmoy += fi
       self.petit_moy+=f1
       self.loi_moy+=f2
@@ -387,26 +389,26 @@ class pop:
     liste_fitness=[]
     epsilon=20
     if not SEUIL:
-      while self.gen<=nbgen_ou_seuil  and epsilon>0.05 :
+      while self.gen<=nbgen_ou_seuil  and epsilon>0.005 :
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
         liste_fitness.append(self.fitmoy)
         if self.gen > 80:
           epsilon=abs((sum(liste_fitness[int(self.gen-50):int(self.gen)])/50)-self.fitmoy)
-          print epsilon
-        print self.gen," fitmoy= ",round(self.fitmoy,4),"\t petit_moy= ",round(self.petit_moy/a1,4), "\t loi_moy= ",round(self.loi_moy/a2,4), "\t   individu min= ",round(self.fitmin[0],4),"\t",round(self.fitmin[1],4),"\t",round(self.fitmin[2],4)
+          #print epsilon
+        #print self.gen," fitmoy= ",round(self.fitmoy,4),"\t petit_moy= ",round(self.petit_moy/a1,4), "\t loi_moy= ",round(self.loi_moy/a2,4), "\t   individu min= ",round(self.fitmin[0],4),"\t",round(self.fitmin[1],4),"\t",round(self.fitmin[2],4)
     else :
       self.calc_fitness(a1,a2,a3)
       while self.fitmin>nbgen_ou_seuil:
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
-        print self.gen," fitmoy= ",round(self.fitmoy),"  fitmin= ",self.fitmin  #affichage de la génération, fitness moy et min
+        #print self.gen," fitmoy= ",round(self.fitmoy),"  fitmin= ",self.fitmin  #affichage de la génération, fitness moy et min
     global nbgen_ou_seuil
     nbgen_ou_seuil=self.gen-1
 
-    print " Nombre Seuil",nbgen_ou_seuil
+    #print " Nombre Seuil",nbgen_ou_seuil
 #-------------------------------------------------------------------------------------------------------------------------------
   #Sauvegarde les données de l'individu ayant la plus basse fitness
     # crée un fichier "nom".edge pour visualiser le graphe sous Cytoscape 
@@ -443,14 +445,14 @@ class pop:
       s+=str(i)
     f.write(s)
     f.close()
-    print "Genome : " + s
+    #print "Genome : " + s
  
  
   def hist_Graph(self): # sauvegarde les données de l'individu ayant la plus basse fitness
     individu_min=self.pop[pop1.f[0][1]]
     distri = nx.degree_histogram(individu_min.graphe)
     liste = []
-    print "distri"+ str(distri)
+    #print "distri"+ str(distri)
     for i in range(0,len(distri)) :
       for j in range(0,distri[i]) :
         liste.append(i)
@@ -488,8 +490,8 @@ class pop:
    
   def plot_Graph(self) :
    
-    print str(len(range(1,nbgen_ou_seuil+1)))
-    print str(len(self.tab_fitmin[0]))
+    #print str(len(range(1,nbgen_ou_seuil+1)))
+    #print str(len(self.tab_fitmin[0]))
    
     plt.plot(range(0,nbgen_ou_seuil+1),self.tab_fitmin[0],'b')
     plt.plot(range(0,nbgen_ou_seuil+1),self.tab_fitmoy[0],'r')

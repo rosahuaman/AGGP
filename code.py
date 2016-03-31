@@ -41,7 +41,7 @@ a1=0.1
  
 #Coeff loi puissance
 GAMMA=2.5  #entre 2 et 3
-a2=1
+a2=2
 a3=-0.1
  
 
@@ -75,9 +75,10 @@ class individu:
     f1=self.petit_monde()
     f2=self.loi_puissance()
     f3=self.loi_clustering()
+    f4=self.connection()
 
     if f3==True:
-      b=2
+      b=5
     else:
       b=-1
 
@@ -86,8 +87,13 @@ class individu:
      # sub=nx.connected_component_subgraphs(self.graphe)
       #f1*=len(sub)
       #f2*=len(sub)
-    return log(a1*f1),a2*f2,a3*b 
- 
+    if f4==0:
+      f4=100
+    return log(a1*f1),a2*f2,a3*b ,f4
+  
+  def connection(self):
+    test=nx.is_connected(self.graphe)
+    return test 
 
     
 
@@ -301,8 +307,8 @@ class pop:
     self.petit_moy=0    #fitness petit monde moyenne
     self.loi_moy=0      #fitness loi puissance moyenne
     for i,x in enumerate(self.pop):  #i:indice  x:individu
-      f1,f2,f3=x.fitness(a1,a2,a3)
-      fi=f1+f2+f3
+      f1,f2,f3,f4=x.fitness(a1,a2,a3)
+      fi=f1+f2+f3+f4
       #fi=fi/10000
       #fi=log(fi)
       self.fitmoy += fi
@@ -389,7 +395,7 @@ class pop:
     liste_fitness=[]
     epsilon=20
     if not SEUIL:
-      while self.gen<=nbgen_ou_seuil  and epsilon>0.005 :
+      while self.gen<=nbgen_ou_seuil  and epsilon>0.05 :
         self.calc_fitness(a1,a2,a3)  #calcul tableau fitness, fitness min et moy 
         self.evolution()     #nouvelle population npop mutée
         self.update()        #pop=npop, generation +1
